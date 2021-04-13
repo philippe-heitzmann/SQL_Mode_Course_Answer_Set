@@ -43,6 +43,12 @@ from tutorial.aapl_historical_stock_price;
 
 1. What was Apple's lowest stock price (at the time of this data collection)?
 
+select min(low) from tutorial.aapl_historical_stock_price;
+
+
+1. What was the highest single-day increase in Apple's share value?
+
+select max(close - open) from tutorial.aapl_historical_stock_price; 
 
 
 
