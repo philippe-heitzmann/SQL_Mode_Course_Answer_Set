@@ -1,10 +1,11 @@
 ## SQL Mode Course Answer Key 
 
 
-#### Intermediate
+### Intermediate
 
 
-##### SQL Aggregate Functions - COUNT
+
+#### SQL Aggregate Functions - COUNT
 
 
 1. Write a query to count the number of non-null rows in the low column.
@@ -26,7 +27,7 @@ SELECT COUNT(year) AS year,
 
 
 
-##### SQL Aggregate Functions - SUM
+#### SQL Aggregate Functions - SUM
 
 
 1. Write a query to calculate the average opening price (hint: you will need to use both COUNT and SUM, as well as some simple arithmetic.).
@@ -37,7 +38,7 @@ from tutorial.aapl_historical_stock_price;
 
 
 
-##### SQL Aggregate Functions - MIN/MAX
+#### SQL Aggregate Functions - MIN/MAX
 
 
 1. What was Apple's lowest stock price (at the time of this data collection)?
