@@ -1,4 +1,5 @@
 ## SQL Mode Course Answer Key 
+Answer to https://mode.com/sql-tutorial/
 
 
 ### Intermediate
@@ -222,6 +223,135 @@ acquisitions.acquirer_state_code is not NULL and
 companies.state_code is not null
 group by 1
 order by 2 desc;
+
+
+
+#### SQL Joins Using WHERE or ON
+
+1. Write a query that shows a company's name, "status" (found in the Companies table), and the number of unique investors in that company. Order by the number of investors from most to fewest. Limit to only companies in the state of New York.
+
+
+select companies.name, companies.status, count(distinct investments.investor_name) as count_investors
+from tutorial.crunchbase_investments as investments 
+right join tutorial.crunchbase_companies as companies
+on investments.company_permalink = companies.permalink
+where companies.state_code = 'NY'
+group by 1, 2
+order by 3 desc; 
+
+
+2. Write a query that lists investors based on the number of companies in which they are invested. Include a row for companies with no investor, and order from most companies to least.
+
+SELECT case when investments.investor_name is NULL then 'No investors' else investments.investor_name end as count_investors,
+      count(distinct companies.permalink)
+  FROM tutorial.crunchbase_companies as companies 
+  left join tutorial.crunchbase_investments as investments
+  on companies.permalink = investments.company_permalink
+ GROUP BY 1
+ ORDER BY 2 DESC;
+
+
+#### SQL FULL OUTER JOIN
+
+ 1. Write a query that joins tutorial.crunchbase_companies and tutorial.crunchbase_investments_part1 using a FULL JOIN. Count up the number of rows that are matched/unmatched as in the example above.
+	
+ SELECT COUNT(CASE WHEN companies.permalink IS NOT NULL AND investments.company_permalink IS NULL
+                      THEN companies.permalink ELSE NULL END) AS companies_only,
+           COUNT(CASE WHEN companies.permalink IS NOT NULL AND investments.company_permalink IS NOT NULL
+                      THEN companies.permalink ELSE NULL END) AS both_tables,
+           COUNT(CASE WHEN companies.permalink IS NULL AND investments.company_permalink IS NOT NULL
+                      THEN investments.company_permalink ELSE NULL END) AS investments_only
+      FROM tutorial.crunchbase_companies companies
+      FULL JOIN tutorial.crunchbase_investments_part1 investments
+        ON companies.permalink = investments.company_permalink;
+
+
+#### SQL UNION
+
+1. Write a query that appends the two crunchbase_investments datasets above (including duplicate values). Filter the first dataset to only companies with names that start with the letter "T", and filter the second to companies with names starting with "M" (both not case-sensitive). Only include the company_permalink, company_name, and investor_name columns.
+
+SELECT company_permalink, company_name, investor_name
+  FROM tutorial.crunchbase_investments_part1
+  where company_name like 'T%'
+ UNION ALL
+ SELECT company_permalink, company_name, investor_name
+   FROM tutorial.crunchbase_investments_part2
+  where company_name like 'M%';
+
+
+2. Write a query that shows 3 columns. The first indicates which dataset (part 1 or 2) the data comes from, the second shows company status, and the third is a count of the number of investors.
+
+Hint: you will have to use the tutorial.crunchbase_companies table as well as the investments tables. And you'll want to group by status and dataset.
+
+SELECT 'investor_dataset_1' as investor_dataset,
+    companies.status,
+    count(distinct part1.investor_name) as count_investors
+    from tutorial.crunchbase_companies as companies
+    left join tutorial.crunchbase_investments_part1 as part1
+    on companies.permalink = part1.company_permalink
+    group by 1, 2
+    
+UNION ALL
+
+SELECT 'investor_dataset_2' as investor_dataset,
+    companies.status,
+    count(distinct part2.investor_name) as count_investors
+    from tutorial.crunchbase_companies as companies
+    left join tutorial.crunchbase_investments_part2 as part2
+    on companies.permalink = part2.company_permalink
+    group by 1, 2;
+
+
+
+
+### Advanced
+
+
+#### SQL Data Types
+
+1. Convert the funding_total_usd and founded_at_clean columns in the tutorial.crunchbase_companies_clean_date table to strings (varchar format) using a different formatting function for each one.
+
+select cast(funding_total_usd as varchar(1024)), founded_at_clean::varchar(1024) 
+from tutorial.crunchbase_companies_clean_date;
+
+
+#### SQL Datetime Format
+
+1. Write a query that counts the number of companies acquired within 3 years, 5 years, and 10 years of being founded (in 3 separate columns). Include a column for total companies acquired as well. Group by category and limit to only rows with a founding date.
+
+
+
+SELECT companies.category_code, 
+      count(case when acquisitions.acquired_at_cleaned - companies.founded_at_clean::timestamp < '1095 days' then 'within_3y' else NULL end) as within_3y,
+      count(case when acquisitions.acquired_at_cleaned - companies.founded_at_clean::timestamp < '1825 days' then 'within_5y' else NULL end) as within_5y,
+      count(case when acquisitions.acquired_at_cleaned - companies.founded_at_clean::timestamp < '3650 days' then 'within_10y' else NULL end) as within_10y,
+      count(distinct companies.permalink) as count_companies
+  FROM tutorial.crunchbase_companies_clean_date companies
+  join tutorial.crunchbase_acquisitions_clean_date acquisitions
+  on companies.permalink = acquisitions.company_permalink
+ WHERE founded_at_clean IS NOT NULL
+ group by 1
+ order by 5 DESC;
+
+
+#### SQL Functions to Clean Data
+
+1. Write a query that separates the `location` field into separate fields for latitude and longitude. You can compare your results against the actual `lat` and `lon` fields in the table.
+
+
+ SELECT location,
+       TRIM(leading '(' FROM LEFT(location, POSITION(',' IN location) - 1)) AS lat,
+       TRIM(trailing ')' FROM RIGHT(location, LENGTH(location) - POSITION(',' IN location) ) ) AS long
+  FROM tutorial.sf_crime_incidents_2014_01;
+
+
+2. Concatenate the lat and lon fields to form a field that is equivalent to the location field. (Note that the answer will have a different decimal precision.)
+
+SELECT concat('(', lat, ', ', lon, ')') as location
+  FROM tutorial.sf_crime_incidents_2014_01; 
+
+3. Create the same concatenated location field, but using the || syntax instead of CONCAT.
+
 
 
 
