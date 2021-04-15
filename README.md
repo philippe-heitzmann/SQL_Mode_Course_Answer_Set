@@ -1,5 +1,5 @@
 ## SQL Mode Course Answer Key 
-Answer to https://mode.com/sql-tutorial/
+Answers to https://mode.com/sql-tutorial/
 
 
 ### Intermediate
@@ -460,6 +460,20 @@ SELECT end_terminal,
  ORDER BY 1 DESC;
 
 
- 
 
-END
+
+
+## END
+
+
+
+
+
+
+
+
+
+
+
+
+
