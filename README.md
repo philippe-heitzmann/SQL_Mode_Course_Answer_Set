@@ -352,13 +352,114 @@ SELECT concat('(', lat, ', ', lon, ')') as location
 
 3. Create the same concatenated location field, but using the || syntax instead of CONCAT.
 
+SELECT '(' || lat || ', ' || lon || ')' as location
+  FROM tutorial.sf_crime_incidents_2014_01; 
+
+
+4. Write a query that creates a date column formatted YYYY-MM-DD.
+
+select substr(date, 7, 4) || '-' || left(date, 2) || '-' || substr(date, 4, 2)  as date_reformatted
+from tutorial.sf_crime_incidents_2014_01;
+
+
+5. Write a query that returns the `category` field, but with the first letter capitalized and the rest of the letters in lower-case.
+
+
+select upper(left(category, 1)) || lower(substr(category, 2)) as capitalized 
+from tutorial.sf_crime_incidents_2014_01;
+
+
+6. Write a query that counts the number of incidents reported by week. Cast the week as a date to get rid of the hours/minutes/seconds.
+
+select cast(date_trunc('week' , incidents.cleaned_date) as date) as week,
+count(distinct incidents.incidnt_num) as num_incidents
+from tutorial.sf_crime_incidents_cleandate as incidents
+group by week 
+order by 2 desc;
+
+7. Write a query that shows exactly how long ago each indicent was reported. Assume that the dataset is in Pacific Standard Time (UTC - 8).
+
+select incidnt_num,
+NOW() AT TIME ZONE 'PST' - incidents.cleaned_date as time_ago
+from tutorial.sf_crime_incidents_cleandate as incidents;
 
 
 
+#### SQL Subqueries
+
+
+1. Write a query that selects all Warrant Arrests from the tutorial.sf_crime_incidents_2014_01 dataset, then wrap it in an outer query that only displays unresolved incidents.
+
+
+select sub.* from
+(select * from tutorial.sf_crime_incidents_2014_01
+where descript = 'WARRANT ARREST') sub
+where sub.resolution = 'NONE';
+
+
+2. Write a query that displays the average number of monthly incidents for each category. Hint: use tutorial.sf_crime_incidents_cleandate to make your life a little easier.
+
+
+select sub.category, avg(sub.incidents)
+from
+(select EXTRACT('month'  FROM cleaned_date) AS month, category,
+count(distinct incidnt_num) as incidents 
+from tutorial.sf_crime_incidents_cleandate 
+group by 1, 2) sub
+group by 1;
 
 
 
+#### SQL Window Functions
 
 
+1. Write a query modification of the above example query that shows the duration of each ride as a percentage of the total time accrued by riders from each start_terminal
+
+SELECT start_terminal,
+       duration_seconds / SUM(duration_seconds) OVER
+         (PARTITION BY start_terminal) * 100 AS perc_terminal_total
+  FROM tutorial.dc_bikeshare_q1_2012
+ WHERE start_time < '2012-01-08'
+ order by 1, 2 DESC;
 
 
+ 2. Write a query that shows a running total of the duration of bike rides (similar to the last example), but grouped by end_terminal, and with ride duration sorted in descending order.
+
+SELECT end_terminal,
+       duration_seconds,
+       SUM(duration_seconds) OVER
+         (PARTITION BY end_terminal ORDER BY duration_seconds desc)
+         AS running_total
+  FROM tutorial.dc_bikeshare_q1_2012
+ WHERE start_time < '2012-01-08';
+
+
+ 3. Write a query that shows the 5 longest rides from each starting terminal, ordered by terminal, and longest to shortest rides within each terminal. Limit to rides that occurred before Jan. 8, 2012.
+
+
+ SELECT *
+  FROM (
+        SELECT start_terminal,
+               start_time,
+               duration_seconds AS trip_time,
+               RANK() OVER (PARTITION BY start_terminal ORDER BY duration_seconds DESC) AS rank
+          FROM tutorial.dc_bikeshare_q1_2012
+         WHERE start_time < '2012-01-08'
+               ) sub
+ WHERE sub.rank <= 5;
+
+
+ 4. Write a query that shows only the duration of the trip and the percentile into which that duration falls (across the entire dataset—not partitioned by terminal).
+
+
+ SELECT duration_seconds,
+       NTILE(100) OVER (ORDER BY duration_seconds)
+         AS percentile
+  FROM tutorial.dc_bikeshare_q1_2012
+ WHERE start_time < '2012-01-08'
+ ORDER BY 1 DESC;
+
+
+ 
+
+END
